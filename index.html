@@ -1,0 +1,314 @@
+
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Game PJOK Kelas VI</title>
+<style>
+*{box-sizing:border-box}
+body{font-family:Arial,sans-serif;background:#eaf5ff;color:#18344b;margin:0}
+header{background:#087c68;color:white;text-align:center;padding:24px 12px}
+main{max-width:850px;margin:20px auto;padding:12px}
+.card{background:white;border-radius:16px;padding:20px;margin-bottom:16px;box-shadow:0 4px 12px #0001}
+h2{color:#087c68}
+button{padding:12px 16px;border:0;border-radius:9px;background:#087c68;color:white;font-weight:bold;cursor:pointer;margin:4px}
+button:disabled{opacity:.4}
+input,select,textarea{width:100%;padding:11px;border:1px solid #bdd5e7;border-radius:8px;font:inherit}
+label{display:block;margin:10px 0}
+.option{display:flex;gap:10px;padding:10px;background:#f0f8fc;border-radius:8px}
+.option input{width:auto}
+.hidden{display:none}
+.question{border:1px solid #dce9f0;border-radius:12px;padding:15px;margin:12px 0}
+.progress{height:10px;background:#ddd;border-radius:10px;overflow:hidden}
+#bar{height:100%;width:0;background:#16a085}
+.notice{background:#fff4d6;padding:12px;border-radius:8px}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:10px}
+.stat{background:#e9f7f0;padding:14px;border-radius:10px;text-align:center}
+.stat strong{display:block;font-size:24px;color:#087c68}
+footer{text-align:center;padding:20px}
+</style>
+</head>
+<body>
+<header>
+<div style="font-size:40px">🏃 ⚽ 🏀 🏸 🏆</div>
+<h1>PJOK CHAMPION</h1>
+<p>Game Edukatif PJOK Kelas VI</p>
+<p>Belajar • Bergerak • Sehat • Berprestasi</p>
+</header>
+<main>
+<section id="login" class="card">
+<h2>🔐 Login Siswa</h2>
+<label>Nama siswa
+<select id="nama"><option value="">-- Pilih nama --</option></select></label>
+<label>Password (NIPD)
+<input id="pass" type="password" inputmode="numeric" placeholder="Masukkan NIPD"></label>
+<button onclick="login()">Login dan Mulai</button>
+<p id="err" style="color:red"></p>
+</section>
+
+<section id="intro" class="card hidden">
+<h2>🏆 Selamat Datang!</h2>
+<p id="welcome"></p>
+<div class="grid">
+<div class="stat"><strong>15</strong>Pilihan Ganda</div>
+<div class="stat"><strong>5</strong>Pilihan Ganda Kompleks</div>
+<div class="stat"><strong>5</strong>Menjodohkan</div>
+<div class="stat"><strong>10</strong>Isian Singkat</div>
+<div class="stat"><strong>5</strong>Uraian</div>
+</div>
+<p class="notice">Total 40 soal. Nilai otomatis dihitung dari 35 soal objektif. Uraian dinilai guru.</p>
+<button onclick="mulai()">Mulai Game 🎮</button>
+</section>
+
+<section id="game" class="card hidden">
+<p><b id="level"></b> <span id="nomor" style="float:right"></span></p>
+<div class="progress"><div id="bar"></div></div>
+<p id="petunjuk"></p>
+<div id="area"></div>
+<button id="prev" onclick="pindah(-1)">← Sebelumnya</button>
+<button id="next" onclick="pindah(1)">Berikutnya →</button>
+<button id="finish" onclick="selesai()" class="hidden">🏁 Selesaikan</button>
+</section>
+
+<section id="hasil" class="card hidden">
+<h2>🏆 Hasil Permainan</h2>
+<p id="identitas"></p>
+<div class="grid">
+<div class="stat"><strong id="benar"></strong>Jawaban Benar</div>
+<div class="stat"><strong id="nilai"></strong>Nilai Otomatis</div>
+</div>
+<p id="pesan"></p>
+<h2>Jawaban Uraian</h2>
+<div id="hasilEsai"></div>
+<button onclick="unduh()">⬇️ Unduh Hasil TXT</button>
+<button onclick="window.print()">Cetak Hasil</button>
+<button onclick="location.reload()">Login Ulang</button>
+</section>
+</main>
+<footer>Media Pembelajaran PJOK Kelas VI</footer>
+
+<script>
+const $=id=>document.getElementById(id);
+
+const siswa=[
+["ABID ALVARO GAVRIEL","2759"],
+["AFFIN CHARLISA ACHYARNIS","2760"],
+["ALBY FAREL AXEL FAIRUS","2761"],
+["ANGGRAITA DARA KUSUMANINGRUM","2762"],
+["ARGA ADAM ALFATIR","2763"],
+["ARIF AZHARI SETIAWAN","2764"],
+["AZIZ SATRIO PRAMBUDI","2765"],
+["AZKA KHOIRUNNISA","2766"],
+["BILQIS ZAHIRA ALYA AZIZA","2820"],
+["DANIEL IRKHAM YUNIANTO","2767"],
+["DELTA DANIES WICAKSONO","2768"],
+["ELVINA NOVITA SARI","2769"],
+["FATIN DESTIANA SHIDQIA","2770"],
+["IAN THU ALFIAN","2771"],
+["KHALISA ZAHRA RAMADHANI","2772"],
+["LABIBAH ANINDYA JIHAN TALITA ULFA","2774"],
+["MAYDA NURUL AZKIA","2775"],
+["MUHAMMAD AMIRRUDIN","2776"],
+["MUHAMMAD EZA HAFIZ ADITIYA","2777"],
+["MUHAMMAD RIFKY CAHYO SAPUTRO","2778"],
+["NURIYA JANNATUN NAIM","2779"],
+["PRABU AHMAD AHNAFI","2780"],
+["QEYLA ABSHARI FIRDA RAHMADANI","2848"],
+["RAHMAT MAULANA","2781"],
+["RAVA'EL DWI VANDIMAS","2782"],
+["RAVE'AL DIMAS PRAYOGA","2783"],
+["RISMACERLYN NUR ISKANDAR","2784"],
+["SAMUEL DESWA ANGGARA","2785"],
+["VAHDIL ASKA HARIANSYAH","2824"]
+];
+siswa.forEach((s,i)=>{
+ let o=document.createElement("option");
+ o.value=i;o.textContent=s[0];$("nama").appendChild(o);
+});
+
+const pg=[
+["Jumlah pemain inti sepak bola dalam satu tim adalah ....",["5","6","11","12"],2],
+["Teknik mengoper bola disebut ....",["Passing","Shooting","Servis","Smash"],0],
+["Bagian kaki untuk operan pendek yang akurat adalah ....",["Tumit","Kaki bagian dalam","Lutut","Ujung jari"],1],
+["Memantulkan bola basket sambil bergerak disebut ....",["Blocking","Dribbling","Heading","Servis"],1],
+["Tujuan shooting dalam basket adalah ....",["Memasukkan bola ke ring","Keluar lapangan","Menghentikan permainan","Menangkap net"],0],
+["Pukulan untuk memulai permainan voli disebut ....",["Dribbling","Servis","Heading","Start"],1],
+["Jumlah pemain voli di lapangan untuk satu tim adalah ....",["4","5","6","11"],2],
+["Alat untuk memukul kok bulu tangkis adalah ....",["Tongkat estafet","Raket","Bet","Pemukul kasti"],1],
+["Pukulan untuk memulai reli bulu tangkis adalah ....",["Servis","Smash","Lob","Blok"],0],
+["Alat pemukul dalam permainan kasti adalah ....",["Raket","Tongkat pemukul","Kaki","Bendera"],1],
+["Gerakan berpindah tempat dengan langkah cepat adalah ....",["Duduk","Lari","Berdiri","Tidur"],1],
+["Aba-aba start jongkok yang benar adalah ....",["Bersedia, siap, ya","Siap, duduk, lari","Jalan, berhenti, duduk","Lari, siap, tidur"],0],
+["Kemampuan beraktivitas lama tanpa cepat lelah disebut ....",["Daya tahan","Kelenturan","Keseimbangan","Kecepatan reaksi"],0],
+["Gerakan berguling ke depan disebut ....",["Kayang","Guling depan","Sikap lilin","Meroda"],1],
+["Kebiasaan yang baik bagi kesehatan adalah ....",["Jarang minum","Tidak bergerak","Olahraga teratur dan makan bergizi","Tidur larut setiap hari"],2]
+];
+
+const kompleks=[
+["Permainan bola besar adalah ....",["Sepak bola","Basket","Voli","Bulu tangkis"],[0,1,2]],
+["Teknik dasar sepak bola meliputi ....",["Passing","Dribbling","Shooting","Servis raket"],[0,1,2]],
+["Kegiatan untuk meningkatkan kebugaran adalah ....",["Joging","Bersepeda","Latihan sesuai kemampuan","Duduk seharian"],[0,1,2]],
+["Cara menjaga kesehatan adalah ....",["Minum cukup","Makan bergizi","Menjaga kebersihan","Mengabaikan istirahat"],[0,1,2]],
+["Agar olahraga aman, kita perlu ....",["Pemanasan","Perlengkapan sesuai","Mematuhi aturan","Memaksakan diri saat sakit"],[0,1,2]]
+];
+
+const jodoh=[
+["Sepak bola","Menendang bola ke gawang",0],
+["Bola basket","Memantulkan bola sambil bergerak",1],
+["Bulu tangkis","Memukul kok dengan raket",2],
+["Lari estafet","Memberikan tongkat kepada pelari berikutnya",3],
+["Senam lantai","Melakukan guling di atas matras",4]
+];
+const opsiJodoh=[
+"Menendang bola ke gawang",
+"Memantulkan bola sambil bergerak",
+"Memukul kok dengan raket",
+"Memberikan tongkat kepada pelari berikutnya",
+"Melakukan guling di atas matras"
+];
+
+const isian=[
+"Apa nama teknik mengoper bola dalam sepak bola?",
+"Apa nama gerakan memantulkan bola dalam basket?",
+"Apa nama pukulan awal permainan bola voli?",
+"Apa alat untuk memukul kok bulu tangkis?",
+"Apa nama lari sambung menggunakan tongkat?",
+"Apa nama gerakan berguling ke depan?",
+"Apa yang dilakukan sebelum berolahraga?",
+"Apa istilah kemampuan tubuh agar tidak cepat lelah?",
+"Sebutkan satu kegiatan untuk meningkatkan kebugaran!",
+"Sebutkan satu makanan sumber protein!"
+];
+const kunci=[
+["passing","operan","mengoper"],
+["dribbling","dribble","menggiring bola"],
+["servis","service"],
+["raket"],
+["lari estafet","estafet"],
+["guling depan","roll depan","forward roll"],
+["pemanasan","warming up"],
+["daya tahan","endurance","ketahanan tubuh"],
+["joging","jogging","berjalan","berlari","bersepeda","senam","olahraga","latihan fisik"],
+["telur","ikan","daging","tempe","tahu","kacang"]
+];
+
+const esai=[
+["Jelaskan tiga teknik dasar permainan sepak bola!","Passing untuk mengoper, dribbling untuk menggiring, dan shooting untuk menendang ke gawang."],
+["Sebutkan tiga manfaat olahraga teratur!","Menjaga kebugaran, memperkuat otot dan tulang, serta membantu menjaga kesehatan."],
+["Jelaskan cara melakukan pemanasan dan manfaatnya!","Melakukan gerakan ringan sebelum latihan agar tubuh siap beraktivitas."],
+["Sebutkan tiga cara menjaga keselamatan saat senam lantai!","Menggunakan matras, melakukan pemanasan, dan berlatih sesuai kemampuan dengan pengawasan."],
+["Jelaskan contoh pola hidup sehat sehari-hari!","Makan bergizi, minum cukup, tidur teratur, menjaga kebersihan, dan aktif bergerak."]
+];
+
+let pemain=null,pos=0,jawaban={},sudah=false;
+function login(){
+ let i=$("nama").value,p=$("pass").value.trim();
+ if(i===""||p===""){ $("err").textContent="Pilih nama dan masukkan NIPD.";return; }
+ if(siswa[Number(i)][1]!==p){$("err").textContent="Nama atau NIPD salah.";return;}
+ pemain=siswa[Number(i)];
+ $("login").classList.add("hidden");
+ $("intro").classList.remove("hidden");
+ $("welcome").textContent="Selamat datang, "+pemain[0]+"!";
+}
+function mulai(){
+ $("intro").classList.add("hidden");
+ $("game").classList.remove("hidden");
+ tampil();
+}
+function jenis(i){return i<15?0:i<20?1:i<25?2:i<35?3:4}
+function esc(s){
+ return String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+}
+function tampil(){
+ let j=jenis(pos);
+ $("level").textContent=["Level 1 • Pilihan Ganda","Level 2 • Pilihan Ganda Kompleks","Level 3 • Menjodohkan","Level 4 • Isian Singkat","Level 5 • Uraian"][j];
+ $("nomor").textContent="Soal "+(pos+1)+"/40";
+ $("bar").style.width=((pos+1)/40*100)+"%";
+ $("petunjuk").textContent=["Pilih satu jawaban.","Pilih semua jawaban yang benar.","Jodohkan dengan ciri yang tepat.","Tuliskan jawaban singkat.","Jawablah dengan jelas."][j];
+ $("prev").disabled=pos===0;
+ $("next").classList.toggle("hidden",pos===39);
+ $("finish").classList.toggle("hidden",pos!==39);
+ let h="";
+ if(j===0){
+  let q=pg[pos];
+  h=`<div class="question"><h3>${pos+1}. ${q[0]}</h3>`+
+  q[1].map((v,k)=>`<label class="option"><input type="radio" name="jaw" value="${k}" ${jawaban[pos]===k?"checked":""}>${String.fromCharCode(65+k)}. ${v}</label>`).join("")+"</div>";
+ }else if(j===1){
+  let q=kompleks[pos-15],a=jawaban[pos]||[];
+  h=`<div class="question"><h3>${pos+1}. ${q[0]}</h3>`+
+  q[1].map((v,k)=>`<label class="option"><input type="checkbox" name="jaw" value="${k}" ${a.includes(k)?"checked":""}>${String.fromCharCode(65+k)}. ${v}</label>`).join("")+"</div>";
+ }else if(j===2){
+  let q=jodoh[pos-20];
+  h=`<div class="question"><h3>${pos+1}. Jodohkan: ${q[0]}</h3><select id="isian"><option value="">-- Pilih jawaban --</option>`+
+  opsiJodoh.map((v,k)=>`<option value="${k}" ${String(jawaban[pos])===String(k)?"selected":""}>${v}</option>`).join("")+"</select></div>";
+ }else if(j===3){
+  h=`<div class="question"><h3>${pos+1}. ${isian[pos-25]}</h3><input id="isian" value="${esc(jawaban[pos]||"")}" placeholder="Jawabanmu"></div>`;
+ }else{
+  h=`<div class="question"><h3>${pos+1}. ${esai[pos-35][0]}</h3><textarea id="isian" rows="5" placeholder="Tuliskan jawabanmu">${esc(jawaban[pos]||"")}</textarea></div>`;
+ }
+ $("area").innerHTML=h;
+}
+function simpan(){
+ let j=jenis(pos);
+ if(j===0){
+  let e=document.querySelector('input[name="jaw"]:checked');
+  if(e)jawaban[pos]=+e.value;else delete jawaban[pos];
+ }else if(j===1){
+  jawaban[pos]=[...document.querySelectorAll('input[name="jaw"]:checked')].map(e=>+e.value);
+ }else{
+  let e=$("isian");if(e)jawaban[pos]=e.value.trim();
+ }
+}
+function pindah(d){
+ simpan();pos=Math.max(0,Math.min(39,pos+d));tampil();
+ window.scrollTo({top:0,behavior:"smooth"});
+}
+function norm(s){return String(s??"").toLowerCase().trim().replace(/[.,!?;:]/g,"").replace(/\s+/g," ")}
+function hitung(){
+ let b=0;
+ for(let i=0;i<15;i++)if(jawaban[i]===pg[i][2])b++;
+ for(let i=15;i<20;i++){
+  let a=jawaban[i]||[],k=kompleks[i-15][2];
+  if(a.length===k.length&&a.every(x=>k.includes(x)))b++;
+ }
+ for(let i=20;i<25;i++)if(Number(jawaban[i])===jodoh[i-20][2])b++;
+ for(let i=25;i<35;i++){
+  let a=norm(jawaban[i]);
+  if(a&&kunci[i-25].some(x=>norm(x)===a))b++;
+ }
+ return {b,n:Math.round(b/35*100)};
+}
+function selesai(){
+ simpan();
+ if(!confirm("Yakin ingin mengumpulkan jawaban?"))return;
+ sudah=true;
+ let r=hitung();
+ $("game").classList.add("hidden");
+ $("hasil").classList.remove("hidden");
+ $("identitas").textContent="Nama: "+pemain[0]+" | NIPD: "+pemain[1];
+ $("benar").textContent=r.b+"/35";
+ $("nilai").textContent=r.n;
+ $("pesan").textContent=r.n>=90?"Luar biasa! 🌟":r.n>=75?"Bagus, terus berlatih! 👏":r.n>=60?"Cukup baik, tingkatkan lagi! 💪":"Tetap semangat belajar! 🌱";
+ $("hasilEsai").innerHTML=esai.map((e,i)=>
+ `<div class="question"><h3>${i+36}. ${e[0]}</h3><p><b>Jawaban siswa:</b><br>${esc(jawaban[i+35]||"Belum dijawab")}</p><p><b>Contoh jawaban:</b> ${e[1]}</p><label>Nilai guru (0–4)<input type="number" min="0" max="4" id="skor${i}" value="0"></label></div>`
+ ).join("");
+ window.scrollTo(0,0);
+}
+function unduh(){
+ if(!sudah)return;
+ let r=hitung();
+ let t="HASIL GAME PJOK KELAS VI\nNama: "+pemain[0]+"\nNIPD: "+pemain[1]+"\nNilai otomatis: "+r.n+"\nJawaban benar: "+r.b+"/35\n\n";
+ for(let i=0;i<15;i++)t+=(i+1)+". "+pg[i][0]+"\nJawaban: "+(jawaban[i]===undefined?"Kosong":pg[i][1][jawaban[i]])+"\n\n";
+ for(let i=15;i<20;i++)t+=(i+1)+". "+kompleks[i-15][0]+"\nJawaban: "+(jawaban[i]||[]).map(k=>kompleks[i-15][1][k]).join(", ")+"\n\n";
+ for(let i=20;i<25;i++)t+=(i+1)+". "+jodoh[i-20][0]+"\nJawaban: "+(jawaban[i]===undefined?"Kosong":opsiJodoh[Number(jawaban[i])])+"\n\n";
+ for(let i=25;i<35;i++)t+=(i+1)+". "+isian[i-25]+"\nJawaban: "+(jawaban[i]||"Kosong")+"\n\n";
+ for(let i=0;i<5;i++)t+=(i+36)+". "+esai[i][0]+"\nJawaban: "+(jawaban[i+35]||"Kosong")+"\nSkor guru: "+$("skor"+i).value+"/4\n\n";
+ let blob=new Blob(["\ufeff"+t],{type:"text/plain;charset=utf-8"});
+ let url=URL.createObjectURL(blob),a=document.createElement("a");
+ a.href=url;a.download="Hasil_PJOK_"+pemain[0].replace(/\s+/g,"_")+".txt";a.click();
+ URL.revokeObjectURL(url);
+}
+</script>
+</body>
+</html>
